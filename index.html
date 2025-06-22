@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Колесо Судьбы</title>
+  <style>
+    body {
+      font-family: 'Georgia', serif;
+      background-color: #1e1e1e;
+      color: #f0e6d2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+    #wheel {
+      margin-top: 2rem;
+    }
+    input, button {
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+    #result {
+      margin-top: 2rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    canvas {
+      background: #f0e6d2;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Колесо Судьбы</h1>
+  <p>Введите код персонажа, чтобы запустить судьбоносный выбор:</p>
+  <input type="text" id="codeInput" placeholder="Введите код" />
+  <button onclick="loadWheel()">Подтвердить</button>
+
+  <div id="wheelContainer" style="display:none;">
+    <canvas id="canvas" width="400" height="400"></canvas><br />
+    <button onclick="spinWheel()">Крутить колесо</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const dataByCode = {
+      "VCE924": [
+        "Разлила напиток на себя",
+        "Уронила хрустальный шар",
+        "Опоздала",
+        "Произвела впечатление на главную гадалку",
+        "Сделала успешное предсказание"
+      ],
+      "WKG215": [
+        "Пролил на министра магии напиток",
+        "Неудачно пошутил в присутствии высокопоставленных людей",
+        "Неверно произнес фамилию главы отдела",
+        "Произвел впечатление на министра",
+        "Предложил интересную идею"
+      ]
+    };
+
+    let options = [];
+    let spinning = false;
+    let wheel;
+
+    function loadWheel() {
+      const code = document.getElementById('codeInput').value.trim();
+      if (!dataByCode[code]) {
+        alert("Неверный код персонажа.");
+        return;
+      }
+      options = dataByCode[code];
+      drawWheel();
+      document.getElementById('wheelContainer').style.display = 'block';
+    }
+
+    function drawWheel() {
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = 180;
+      const sliceAngle = (2 * Math.PI) / options.length;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      options.forEach((opt, i) => {
+        const angle = sliceAngle * i;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, angle, angle + sliceAngle);
+        ctx.fillStyle = i % 2 === 0 ? '#8c7853' : '#d2b48c';
+        ctx.fill();
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(angle + sliceAngle / 2);
+        ctx.fillStyle = '#000';
+        ctx.font = '14px Georgia';
+        ctx.fillText(opt, radius / 2, 0);
+        ctx.restore();
+      });
+    }
+
+    function spinWheel() {
+      if (spinning) return;
+      spinning = true;
+      const selected = Math.floor(Math.random() * options.length);
+      const result = options[selected];
+      setTimeout(() => {
+        document.getElementById('result').textContent = `Выпало: ${result}`;
+        spinning = false;
+        document.querySelector("#wheelContainer button").disabled = true;
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
