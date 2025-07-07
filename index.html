@@ -1,121 +1,150 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Колесо Судьбы</title>
+  <meta charset="UTF-8">
+  <title>Колесо заданий</title>
   <style>
     body {
-      font-family: 'Georgia', serif;
-      background-color: #1e1e1e;
-      color: #f0e6d2;
+      font-family: Arial, sans-serif;
+      background-color: #fdfdfd;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      padding: 2rem;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
     }
-    #wheel {
-      margin-top: 2rem;
+
+    .container {
+      text-align: center;
     }
-    input, button {
-      padding: 0.5rem;
-      font-size: 1rem;
+
+    h1 {
+      margin-bottom: 20px;
     }
-    #result {
-      margin-top: 2rem;
-      font-size: 1.5rem;
-      font-weight: bold;
+
+    .wheel {
+      position: relative;
+      margin: 20px auto;
     }
+
+    .marker {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+    }
+
     canvas {
-      background: #f0e6d2;
-      border-radius: 50%;
+      transition: transform 0.3s ease-out;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .result {
+      margin-top: 30px;
+      font-size: 20px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
     }
   </style>
 </head>
 <body>
-  <h1>Колесо Судьбы</h1>
-  <p>Введите код персонажа, чтобы запустить судьбоносный выбор:</p>
-  <input type="text" id="codeInput" placeholder="Введите код" />
-  <button onclick="loadWheel()">Подтвердить</button>
-
-  <div id="wheelContainer" style="display:none;">
-    <canvas id="canvas" width="400" height="400"></canvas><br />
-    <button onclick="spinWheel()">Крутить колесо</button>
-    <div id="result"></div>
+  <div class="container">
+    <h1>Колесо заданий</h1>
+    <div id="wheel" class="wheel">
+      <div class="marker">▼</div>
+      <canvas id="canvas" width="300" height="300"></canvas>
+    </div>
+    <button id="spin">Крутить колесо</button>
+    <div id="result" class="result"></div>
   </div>
 
   <script>
-    const dataByCode = {
-      "VCE924": [
-        "Разлила напиток на себя",
-        "Уронила хрустальный шар",
-        "Опоздала",
-        "Произвела впечатление на главную гадалку",
-        "Сделала успешное предсказание"
-      ],
-      "WKG215": [
-        "Пролил на министра магии напиток",
-        "Неудачно пошутил в присутствии высокопоставленных людей",
-        "Неверно произнес фамилию главы отдела",
-        "Произвел впечатление на министра",
-        "Предложил интересную идею"
-      ]
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const spinBtn = document.getElementById("spin");
+    const resultBox = document.getElementById("result");
+
+    const tasks = {
+      1: "Придумай как оказаться за спиной профессора и покривляйся, затем как ни в чем не бывало вернись на место.",
+      2: "Вставь слово «поцелуй» или «соблазн» в собственный ответ на вопрос профессора, сохрани серьезное лицо и жди реакции.",
+      3: "Подсунь записку с фальшивым признанием в любви кому-то из учеников, подписавшись именем профессора.",
+      4: "Прочти абзац из учебника так, будто сгораешь от желания.",
+      5: "Сделай профессору комплимент с налётом флирта.",
+      6: "Запиши провокационную сплетню о себе и запусти ее самолетиком так, чтоб она попала на стол профессора."
     };
 
-    let options = [];
+    const segments = Object.keys(tasks).map(Number);
+    const colors = ["#f8b195", "#f67280", "#c06c84", "#6c5b7b", "#355c7d", "#99b898"];
+    const anglePerSegment = (2 * Math.PI) / segments.length;
+    let rotation = 0;
     let spinning = false;
-    let wheel;
-
-    function loadWheel() {
-      const code = document.getElementById('codeInput').value.trim();
-      if (!dataByCode[code]) {
-        alert("Неверный код персонажа.");
-        return;
-      }
-      options = dataByCode[code];
-      drawWheel();
-      document.getElementById('wheelContainer').style.display = 'block';
-    }
 
     function drawWheel() {
-      const canvas = document.getElementById('canvas');
-      const ctx = canvas.getContext('2d');
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      const radius = 180;
-      const sliceAngle = (2 * Math.PI) / options.length;
+      for (let i = 0; i < segments.length; i++) {
+        const startAngle = i * anglePerSegment;
+        const endAngle = startAngle + anglePerSegment;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      options.forEach((opt, i) => {
-        const angle = sliceAngle * i;
         ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.arc(centerX, centerY, radius, angle, angle + sliceAngle);
-        ctx.fillStyle = i % 2 === 0 ? '#8c7853' : '#d2b48c';
+        ctx.moveTo(150, 150);
+        ctx.arc(150, 150, 150, startAngle, endAngle);
+        ctx.fillStyle = colors[i];
         ctx.fill();
+
         ctx.save();
-        ctx.translate(centerX, centerY);
-        ctx.rotate(angle + sliceAngle / 2);
-        ctx.fillStyle = '#000';
-        ctx.font = '14px Georgia';
-        ctx.fillText(opt, radius / 2, 0);
+        ctx.translate(150, 150);
+        ctx.rotate(startAngle + anglePerSegment / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#fff";
+        ctx.font = "20px Arial";
+        ctx.fillText(segments[i], 140, 10);
         ctx.restore();
-      });
+      }
     }
 
-    function spinWheel() {
+    drawWheel();
+
+    spinBtn.addEventListener("click", () => {
       if (spinning) return;
       spinning = true;
-      const selected = Math.floor(Math.random() * options.length);
-      const result = options[selected];
-      setTimeout(() => {
-        document.getElementById('result').textContent = `Выпало: ${result}`;
-        spinning = false;
-        document.querySelector("#wheelContainer button").disabled = true;
-      }, 2000);
-    }
+      resultBox.textContent = "";
+
+      const spinTime = 4000;
+      const extraDegrees = 360 * 5;
+      const randomSegment = Math.floor(Math.random() * segments.length);
+      const degreesPerSegment = 360 / segments.length;
+      const stopAngle = (segments.length - randomSegment) * degreesPerSegment - degreesPerSegment / 2;
+      const finalAngle = rotation + extraDegrees + stopAngle;
+
+      const start = performance.now();
+
+      function animate(time) {
+        const progress = Math.min((time - start) / spinTime, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        rotation = finalAngle * easeOut;
+
+        canvas.style.transform = `rotate(${rotation}deg)`;
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          spinning = false;
+          const landedIndex = (segments.length - Math.floor((rotation % 360) / degreesPerSegment)) % segments.length;
+          const taskNumber = segments[landedIndex];
+          resultBox.textContent = `Задание: ${tasks[taskNumber]}`;
+        }
+      }
+
+      requestAnimationFrame(animate);
+    });
   </script>
 </body>
 </html>
