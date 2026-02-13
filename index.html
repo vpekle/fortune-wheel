@@ -1,150 +1,276 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Колесо заданий</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #fdfdfd;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      height: 100vh;
-      margin: 0;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kiss Marry Kill</title>
 
-    .container {
-      text-align: center;
-    }
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
 
-    h1 {
-      margin-bottom: 20px;
-    }
+<style>
+body {
+    margin: 0;
+    font-family: 'Cormorant Garamond', serif;
+    background: url('pagebg.png') center/cover no-repeat fixed;
+    color: silver;
+    overflow-x: hidden;
+}
 
+/* Overlay particles */
+canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+
+/* Blur effect */
+.blur {
+    filter: blur(6px);
+}
+
+/* Title */
+h1 {
+    text-align: center;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 2.5rem;
+    margin: 40px 20px;
+    color: silver;
+}
+
+/* Wheels container */
+.container {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    padding: 20px;
+}
+
+.wheel-wrapper {
+    text-align: center;
+}
+
+.wheel-label {
+    margin-bottom: 10px;
+    font-size: 1.4rem;
+}
+
+.wheel {
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    border: 6px solid silver;
+    box-shadow: 0 0 20px rgba(192,192,192,0.6);
+    position: relative;
+    overflow: hidden;
+    transition: transform 6s cubic-bezier(.17,.67,.15,.99);
+}
+
+/* Pointer */
+.pointer {
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-bottom: 20px solid silver;
+    margin: 0 auto 10px;
+}
+
+/* Button */
+button {
+    display: block;
+    margin: 40px auto;
+    padding: 12px 30px;
+    font-size: 1.2rem;
+    background: black;
+    color: silver;
+    border: 2px solid silver;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    box-shadow: 0 0 15px silver;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.4s;
+}
+
+.modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: #111;
+    border: 2px solid silver;
+    padding: 30px;
+    text-align: center;
+    transform: scale(0.8);
+    transition: 0.4s;
+}
+
+.modal.active .modal-content {
+    transform: scale(1);
+}
+
+@media (max-width: 768px) {
     .wheel {
-      position: relative;
-      margin: 20px auto;
+        width: 200px;
+        height: 200px;
     }
-
-    .marker {
-      position: absolute;
-      top: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 24px;
-    }
-
-    canvas {
-      transition: transform 0.3s ease-out;
-    }
-
-    button {
-      padding: 10px 20px;
-      font-size: 18px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    .result {
-      margin-top: 30px;
-      font-size: 20px;
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-  </style>
+}
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>Колесо заданий</h1>
-    <div id="wheel" class="wheel">
-      <div class="marker">▼</div>
-      <canvas id="canvas" width="300" height="300"></canvas>
+
+<canvas id="particles"></canvas>
+
+<h1>Узнай свою судьбу — или измени чужую</h1>
+
+<div class="container" id="mainContent">
+
+    <div class="wheel-wrapper">
+        <div class="wheel-label">Kiss</div>
+        <div class="pointer"></div>
+        <div class="wheel" id="wheel1"></div>
     </div>
-    <button id="spin">Крутить колесо</button>
-    <div id="result" class="result"></div>
-  </div>
 
-  <script>
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    const spinBtn = document.getElementById("spin");
-    const resultBox = document.getElementById("result");
+    <div class="wheel-wrapper">
+        <div class="wheel-label">Marry</div>
+        <div class="pointer"></div>
+        <div class="wheel" id="wheel2"></div>
+    </div>
 
-    const tasks = {
-      1: "Придумай как оказаться за спиной профессора и покривляйся, затем как ни в чем не бывало вернись на место.",
-      2: "Вставь слово «поцелуй» или «соблазн» в собственный ответ на вопрос профессора, сохрани серьезное лицо и жди реакции.",
-      3: "Подсунь записку с фальшивым признанием в любви кому-то из учеников, подписавшись именем профессора.",
-      4: "Прочти абзац из учебника так, будто сгораешь от желания.",
-      5: "Сделай профессору комплимент с налётом флирта.",
-      6: "Запиши провокационную сплетню о себе и запусти ее самолетиком так, чтоб она попала на стол профессора."
-    };
+    <div class="wheel-wrapper">
+        <div class="wheel-label">Kill</div>
+        <div class="pointer"></div>
+        <div class="wheel" id="wheel3"></div>
+    </div>
 
-    const segments = Object.keys(tasks).map(Number);
-    const colors = ["#f8b195", "#f67280", "#c06c84", "#6c5b7b", "#355c7d", "#99b898"];
-    const anglePerSegment = (2 * Math.PI) / segments.length;
-    let rotation = 0;
-    let spinning = false;
+</div>
 
-    function drawWheel() {
-      for (let i = 0; i < segments.length; i++) {
-        const startAngle = i * anglePerSegment;
-        const endAngle = startAngle + anglePerSegment;
+<button onclick="spin()">Крутить колесо</button>
 
-        ctx.beginPath();
-        ctx.moveTo(150, 150);
-        ctx.arc(150, 150, 150, startAngle, endAngle);
-        ctx.fillStyle = colors[i];
-        ctx.fill();
+<div class="modal" id="resultModal">
+    <div class="modal-content">
+        <h2>Результат</h2>
+        <p id="resultText"></p>
+        <button onclick="reset()">Крутить снова</button>
+    </div>
+</div>
 
-        ctx.save();
-        ctx.translate(150, 150);
-        ctx.rotate(startAngle + anglePerSegment / 2);
-        ctx.textAlign = "right";
-        ctx.fillStyle = "#fff";
-        ctx.font = "20px Arial";
-        ctx.fillText(segments[i], 140, 10);
-        ctx.restore();
-      }
+<script>
+const names = [
+"Вайолет Макдауэлл","Леандер Пруэтт","Бенджамин Стоукс","Оминис Мракс",
+"Гаррет Уизли","Нелли Оггспайр","Натсай Онай","Имельда Рейес",
+"Кассиус Блэк","Астория Стрёкотт","Лоуренс Дэвис","Грейс Пинч-Смедли",
+"Саманта Дейл","Себастьян Сэллоу","Аделаида Дубс","Анна Сэллоу",
+"Гектор Фоули","Роберт Дантлингтон-Кросс","Эверетт Клоптон","Эдвард Стюард",
+"Крессида Блюм","Сахарисса Тагвуд","Присцилла Уэйлфилд","Софрония Франкин"
+];
+
+const wheels = [
+document.getElementById("wheel1"),
+document.getElementById("wheel2"),
+document.getElementById("wheel3")
+];
+
+const segmentAngle = 360 / names.length;
+
+function createWheel(wheel) {
+    let gradient = [];
+    for (let i = 0; i < names.length; i++) {
+        let color = i % 2 === 0 ? "#000" : "#ccc";
+        gradient.push(`${color} ${i*segmentAngle}deg ${(i+1)*segmentAngle}deg`);
+    }
+    wheel.style.background = `conic-gradient(${gradient.join(",")})`;
+}
+
+wheels.forEach(createWheel);
+
+function getRandom() {
+    return Math.floor(Math.random() * names.length);
+}
+
+function spin() {
+
+    let kiss = getRandom();
+    let marry = getRandom();
+    let kill = getRandom();
+
+    if (kiss === marry) {
+        while (kill === kiss) {
+            kill = getRandom();
+        }
     }
 
-    drawWheel();
+    const results = [kiss, marry, kill];
 
-    spinBtn.addEventListener("click", () => {
-      if (spinning) return;
-      spinning = true;
-      resultBox.textContent = "";
-
-      const spinTime = 4000;
-      const extraDegrees = 360 * 5;
-      const randomSegment = Math.floor(Math.random() * segments.length);
-      const degreesPerSegment = 360 / segments.length;
-      const stopAngle = (segments.length - randomSegment) * degreesPerSegment - degreesPerSegment / 2;
-      const finalAngle = rotation + extraDegrees + stopAngle;
-
-      const start = performance.now();
-
-      function animate(time) {
-        const progress = Math.min((time - start) / spinTime, 1);
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        rotation = finalAngle * easeOut;
-
-        canvas.style.transform = `rotate(${rotation}deg)`;
-
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          spinning = false;
-          const landedIndex = (segments.length - Math.floor((rotation % 360) / degreesPerSegment)) % segments.length;
-          const taskNumber = segments[landedIndex];
-          resultBox.textContent = `Задание: ${tasks[taskNumber]}`;
-        }
-      }
-
-      requestAnimationFrame(animate);
+    wheels.forEach((wheel, i) => {
+        let randomDegree = 360 * 6 + (results[i] * segmentAngle);
+        wheel.style.transform = `rotate(-${randomDegree}deg)`;
     });
-  </script>
+
+    setTimeout(() => {
+        document.getElementById("mainContent").classList.add("blur");
+        const modal = document.getElementById("resultModal");
+        document.getElementById("resultText").innerHTML =
+        `💋 Kiss — ${names[kiss]}<br>
+         💍 Marry — ${names[marry]}<br>
+         💀 Kill — ${names[kill]}`;
+        modal.classList.add("active");
+    }, 6000);
+}
+
+function reset() {
+    document.getElementById("resultModal").classList.remove("active");
+    document.getElementById("mainContent").classList.remove("blur");
+}
+
+/* Particles */
+const canvas = document.getElementById("particles");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particles = [];
+for (let i = 0; i < 60; i++) {
+    particles.push({
+        x: Math.random()*canvas.width,
+        y: Math.random()*canvas.height,
+        r: Math.random()*2,
+        d: Math.random()*1
+    });
+}
+
+function drawParticles() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "rgba(192,192,192,0.6)";
+    particles.forEach(p=>{
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fill();
+        p.y += p.d;
+        if(p.y>canvas.height){p.y=0;}
+    });
+}
+
+setInterval(drawParticles, 33);
+</script>
+
 </body>
 </html>
