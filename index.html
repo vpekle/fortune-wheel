@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kiss Marry Kill</title>
 
-<!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cormorant+Garamond:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
@@ -17,7 +16,6 @@ body {
     overflow-x: hidden;
 }
 
-/* Overlay particles */
 canvas {
     position: fixed;
     top: 0;
@@ -25,21 +23,19 @@ canvas {
     pointer-events: none;
 }
 
-/* Blur effect */
 .blur {
     filter: blur(6px);
 }
 
-/* Title */
 h1 {
     text-align: center;
     font-family: 'Cinzel Decorative', serif;
-    font-size: 2.5rem;
+    font-size: 2.6rem;
     margin: 40px 20px;
     color: silver;
+    text-shadow: 0 0 12px rgba(200,200,200,0.6);
 }
 
-/* Wheels container */
 .container {
     display: flex;
     justify-content: center;
@@ -55,20 +51,9 @@ h1 {
 .wheel-label {
     margin-bottom: 10px;
     font-size: 1.4rem;
+    letter-spacing: 2px;
 }
 
-.wheel {
-    width: 260px;
-    height: 260px;
-    border-radius: 50%;
-    border: 6px solid silver;
-    box-shadow: 0 0 20px rgba(192,192,192,0.6);
-    position: relative;
-    overflow: hidden;
-    transition: transform 6s cubic-bezier(.17,.67,.15,.99);
-}
-
-/* Pointer */
 .pointer {
     width: 0;
     height: 0;
@@ -78,28 +63,39 @@ h1 {
     margin: 0 auto 10px;
 }
 
-/* Button */
+.wheel {
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    border: 6px solid silver;
+    box-shadow: 0 0 25px rgba(192,192,192,0.7);
+    position: relative;
+    overflow: hidden;
+    transition: transform 6s cubic-bezier(.17,.67,.15,.99);
+}
+
 button {
     display: block;
     margin: 40px auto;
-    padding: 12px 30px;
+    padding: 14px 35px;
     font-size: 1.2rem;
     background: black;
     color: silver;
     border: 2px solid silver;
     cursor: pointer;
     transition: 0.3s;
+    letter-spacing: 1px;
 }
 
 button:hover {
-    box-shadow: 0 0 15px silver;
+    box-shadow: 0 0 20px silver;
 }
 
-/* Modal */
 .modal {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -116,10 +112,11 @@ button:hover {
 .modal-content {
     background: #111;
     border: 2px solid silver;
-    padding: 30px;
+    padding: 40px;
     text-align: center;
     transform: scale(0.8);
     transition: 0.4s;
+    box-shadow: 0 0 30px rgba(200,200,200,0.4);
 }
 
 .modal.active .modal-content {
@@ -167,7 +164,7 @@ button:hover {
 <div class="modal" id="resultModal">
     <div class="modal-content">
         <h2>Результат</h2>
-        <p id="resultText"></p>
+        <p id="resultText" style="font-size:1.3rem; line-height:1.8;"></p>
         <button onclick="reset()">Крутить снова</button>
     </div>
 </div>
@@ -189,6 +186,7 @@ document.getElementById("wheel3")
 ];
 
 const segmentAngle = 360 / names.length;
+let currentRotations = [0,0,0];
 
 function createWheel(wheel) {
     let gradient = [];
@@ -220,8 +218,10 @@ function spin() {
     const results = [kiss, marry, kill];
 
     wheels.forEach((wheel, i) => {
-        let randomDegree = 360 * 6 + (results[i] * segmentAngle);
-        wheel.style.transform = `rotate(-${randomDegree}deg)`;
+        let extraSpins = 360 * (6 + Math.floor(Math.random() * 3));
+        let finalAngle = results[i] * segmentAngle;
+        currentRotations[i] += extraSpins + finalAngle;
+        wheel.style.transform = `rotate(-${currentRotations[i]}deg)`;
     });
 
     setTimeout(() => {
@@ -243,7 +243,6 @@ function reset() {
 /* Particles */
 const canvas = document.getElementById("particles");
 const ctx = canvas.getContext("2d");
-
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
@@ -253,7 +252,7 @@ for (let i = 0; i < 60; i++) {
         x: Math.random()*canvas.width,
         y: Math.random()*canvas.height,
         r: Math.random()*2,
-        d: Math.random()*1
+        d: Math.random()*0.6+0.2
     });
 }
 
